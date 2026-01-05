@@ -1,32 +1,25 @@
 
-# ChatGPT generated code
+# ChatGPT generated, personally modified code
 # crawl all the pages in the webiste, scraping and storing relevant information
+# Running this script will create or overwrite pages.json
 
 # Install these packages: pip install requests beautifulsoup4
-
-# This is the first script. The order, when starting from nothing is as follows:
-# Website_crawl_scrape, Clean_raw_text, Chunk_cleaned_text,
-# docker-compose.yml, create_knowledge_chunks_collection, import_knowledge_chunks_data
-# RAG_example
-
-# If the pages have already been loaded and don't need to be updated, just run the following:
-# start docker desktop, docker-compose.yml, RAG_example
 
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
 import json
 
-BASE_URL = "https://provost.ncsu.edu/ofe/"
-DOMAIN = "provost.ncsu.edu"
+BASE_URL = ""     # The website you want your RAG chatbot to have knowledge from
+DOMAIN = ""       # Just the domain of the website you want to crawl
 
 visited = set()
 pages_data = []
 
 def is_valid_url(url):
-    """Check if URL is valid and within the /ofe/ path"""
+    """Check if URL is valid and within the desired path"""
     parsed = urlparse(url)
-    return (parsed.netloc == DOMAIN) and parsed.path.startswith("/ofe/")
+    return (parsed.netloc == DOMAIN) and parsed.path.startswith("/") # insert path if necessary
 
 def is_html(response):
     """Check if response content is HTML"""
@@ -34,11 +27,12 @@ def is_html(response):
     return "text/html" in content_type
 
 def should_skip(url):
+    """Define any pages to skip"""
     # Skip newsletter hub page
-    if "ofe-newsletter" in url:
+    if "newsletter" in url:
         return True
     # Skip external newsletter site
-    if "email.web.ncsu.edu" in url:
+    if "email.web" in url:
         return True
     return False
 
@@ -61,7 +55,7 @@ def scrape_page(url):
 
 
 def crawl(url):
-    """Recursive crawl of all /ofe/ pages"""
+    """Recursive crawl of all website pages"""
     if url in visited or should_skip(url):
         return
     visited.add(url)
@@ -93,3 +87,4 @@ if __name__ == "__main__":
         json.dump(pages_data, f, indent=2, ensure_ascii=False)
 
     print(f"\n✅ Finished crawling. Saved {len(pages_data)} pages to pages.json")
+
