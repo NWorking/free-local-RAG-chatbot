@@ -1,5 +1,6 @@
 # free-local-RAG-chatbot
 IN PROGRESS - I have gotten this to run successfully on my machine. I am in the process of uploading all the files.
+
 In this repository are the scripts to make a Retrieval Augemented Generation (RAG) chatbot. This chatbot is completely free and locally hosted.
 For the AI model: I used Ollama which allows the user to download pretrained LLM models to their local machine for free.
 RAG chatbots require vector databases. I chose Weaviate, as it is an open-source, cloud native vector database.
