@@ -1,0 +1,42 @@
+
+# Run these commands to start Weaviate instance in Docker
+# Nothing should have to be changed in this file
+
+# First, start docker desktop
+# Next, run these two commands in your terminal - 
+# change directory to wherever this script is located:
+#   cd C:\Users\...\Scripts\
+# get docker up:
+#   docker-compose up -d
+
+# Run this at the end of the session - 
+# docker compose down
+
+# NOTE: this is for local development only, this is not secure enough to be used in production
+---
+services:
+  weaviate:
+    command:
+    - --host
+    - 0.0.0.0
+    - --port
+    - '8080'
+    - --scheme
+    - http
+    image: cr.weaviate.io/semitechnologies/weaviate:1.33.0
+    ports:
+    - 8080:8080
+    - 50051:50051
+    volumes:
+    - weaviate_data:/var/lib/weaviate
+    restart: on-failure:0
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'     # WARNING: Anonymous access enabled – for local development only
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      ENABLE_API_BASED_MODULES: 'true'
+      ENABLE_MODULES: 'text2vec-ollama,generative-ollama'
+      CLUSTER_HOSTNAME: 'node1'
+volumes:
+  weaviate_data:
+...
