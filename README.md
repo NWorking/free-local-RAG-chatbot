@@ -1,5 +1,4 @@
 # free-local-RAG-chatbot
-IN PROGRESS - I have gotten this to run successfully on my machine. I am in the process of uploading all the files.
 
 In this repository are the scripts to make a Retrieval Augemented Generation (RAG) chatbot. This chatbot is completely free and locally hosted.
 For the AI model: I used Ollama which allows the user to download pretrained LLM models to their local machine for free.
@@ -22,8 +21,8 @@ The basic steps to vectorize the data with **Weaviate** are:
 2. Create the collections that your data will be stored in (create_knowledge_chunks_collection.py)
 3. Import your data into Weaviate collections (import_knowledge_chunks_data.py)
 
-The above steps are preparation. Once they have been completed all that is left:
-1. is to query your RAG chatbot (RAG_example.py)
+The above steps are preparation. Once they have been completed all that is left is:
+1. Query your RAG chatbot (RAG_example.py)
    
 
 As a quick summary, this is the order the scripts should be run in when starting from scratch: 
