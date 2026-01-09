@@ -1,6 +1,7 @@
 
 # Creates the empty "collections" which are the containers that will hold the data that was chunked in a previous step
 # Also configures the LLM and embedding model to use for vectorization
+# By including url as a collections property, the chatbot will be able to include links to where it got its information in its responses
 
 import weaviate
 from weaviate.classes.config import Property, DataType, Configure
