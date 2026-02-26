@@ -3,6 +3,9 @@
 # A response is formulated based on the instructions in grouped_task, then printed
 # You now have a local RAG chatbot!
 
+# NOTE: query is just what is used to get data from the database.
+#       The LLM only sees the text in grouped_task.
+
 import weaviate
 from weaviate.classes.generate import GenerativeConfig
 
