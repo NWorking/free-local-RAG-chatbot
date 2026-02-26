@@ -8,6 +8,9 @@ from weaviate.classes.config import Property, DataType, Configure
 
 client = weaviate.connect_to_local()
 
+# Uncomment this line if you are needing to REIMPORT data
+# client.collections.delete("KnowledgeChunk")
+
 # Create a new collection for your RAG documents
 knowledge_chunks = client.collections.create(
     name="KnowledgeChunk",
@@ -20,6 +23,10 @@ knowledge_chunks = client.collections.create(
         api_endpoint="http://host.docker.internal:11434",  #"http://host.docker.internal:11434" if using Docker, or "http://localhost:11434 if not using docker"
         model="nomic-embed-text",
     ),
+    generative_config=Configure.Generative.ollama(
+        api_endpoint="http://host.docker.internal:11434",
+        model="llama3.2"
+    )
 )
 
 client.close()
