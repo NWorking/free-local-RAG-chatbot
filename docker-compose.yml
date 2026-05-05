@@ -1,45 +1,126 @@
 
-# Run these commands to start Weaviate instance in Docker
-# Nothing should have to be changed in this file
-
 # First, start docker desktop
-# Next, run these two commands in your terminal - 
-# change directory to wherever this script is located:
-#   cd C:\Users\...\Scripts\
-# get docker up:
-#   docker-compose up -d
+# Next, run these commands in your terminal
+# cd C:\Users\PATH\TO\YOUR\PROJECT
+# docker-compose up -d
 
-# Run this at the end of the session - 
+# Run this at the end of the session:
 # docker compose down
 
-# NOTE: this is for local development only, this is not secure enough to be used in production
----
+# Paste this into your browser to access the chatbot http://localhost:8501
+
 services:
+
   weaviate:
-    command:
-    - --host
-    - 0.0.0.0
-    - --port
-    - '8080'
-    - --scheme
-    - http
     image: cr.weaviate.io/semitechnologies/weaviate:1.33.0
     ports:
-    - 8080:8080
-    - 50051:50051
-    volumes:
-    - weaviate_data:/var/lib/weaviate
-    restart: on-failure:0
+      - "8080:8080"
+      - "50051:50051"          # gRPC port must be exposed
     environment:
       QUERY_DEFAULTS_LIMIT: 25
-      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'     # WARNING: Anonymous access enabled – for local development only
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
       PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
-      
       ENABLE_API_BASED_MODULES: 'true'
       ENABLE_MODULES: 'text2vec-ollama,generative-ollama'
-      
       CLUSTER_HOSTNAME: 'node1'
-      OLLAMA_BASE_URL: 'http://host.docker.internal:11434'
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+    restart: always
+    healthcheck:                # dependents wait for real readiness
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/v1/.well-known/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
+    networks:
+      - chatbot-network
+
+  ollama:
+    # this block should enable gpu usage
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: always
+    healthcheck:                # dependents wait for real readiness
+      test: ["CMD-SHELL", "ollama list || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
+    networks:
+      - chatbot-network
+
+  ollama-pull:                  # pulls LLM before anything uses it
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c", "ollama pull llama3.2 && ollama pull nomic-embed-text"]
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    networks:
+      - chatbot-network
+
+  init-schema:
+    build: .
+    command: python create_knowledge_chunks_collection.py
+    depends_on:
+      weaviate:
+        condition: service_healthy   # wait for Weaviate to be ready
+      ollama:
+        condition: service_healthy   # schema may reference ollama vectorizer
+      ollama-pull:
+        condition: service_completed_successfully
+    environment:
+      WEAVIATE_HOST: weaviate
+      WEAVIATE_HTTP_PORT: 8080
+      WEAVIATE_GRPC_PORT: 50051
+      OLLAMA_URL: ${OLLAMA_URL}
+    networks:
+      - chatbot-network
+
+  init-ingest:
+    build: .
+    command: python import_knowledge_chunks_data.py
+    depends_on:
+      init-schema:
+        condition: service_completed_successfully  # wait for schema first
+      ollama-pull:
+        condition: service_completed_successfully  # model must exist to embed
+    environment:
+      WEAVIATE_HOST: weaviate
+      WEAVIATE_HTTP_PORT: 8080
+      WEAVIATE_GRPC_PORT: 50051
+      OLLAMA_URL: ${OLLAMA_URL}
+    networks:
+      - chatbot-network
+
+  chatbot:
+    build: .
+    ports:
+      - "8501:8501"
+    depends_on:
+      init-ingest:
+        condition: service_completed_successfully  # wait for data to load
+    environment:
+      WEAVIATE_URL: ${WEAVIATE_URL}
+      OLLAMA_URL: ${OLLAMA_URL}
+    networks:
+      - chatbot-network
+
 volumes:
   weaviate_data:
-...
+  ollama_data:
+
+networks:
+  chatbot-network:
+    driver: bridge
