@@ -1,5 +1,5 @@
 # This expands on RAG_example.py with prompt modes, prompt engineering, and
-# multi-turn conversation with memory
+# multi-turn conversation with memory and logging
 
 import json
 import requests
@@ -8,7 +8,9 @@ import weaviate
 from weaviate.classes.generate import GenerativeConfig
 from weaviate.classes.init import AdditionalConfig, Timeout
 
-
+# environment variables
+WEAVIATE_URL = os.getenv("WEAVIATE_URL", "http://localhost:8080")
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 
 #----PROMPT MODES-------------------------------------------------------------------------------------------------------
 # Different prompts are better for different tasks
@@ -107,7 +109,7 @@ def rewrite_query(current_query, conversation_history):
 
     # Call Ollama - Just Ollama because it doesn't need context from the database to rewrite the query
     response = requests.post(
-        "http://localhost:11434/api/generate",
+        OLLAMA_URL, # "http://localhost:11434/api/generate",  <-- use this for local development
         json={
             "model": "llama3.2",  # or whatever model is being used
             "prompt": prompt,
@@ -150,12 +152,44 @@ def needs_rewriting(query):
 
 #---RETRIEVAL AUGEMENTED GENERATION-------------------------------------------------------------------------------------
 
-client = weaviate.connect_to_local(
-    # port=8080,
-    # grpc_port=50051,
+
+# Configure basic logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        RotatingFileHandler('chatbot.log', maxBytes=10*1024*1024, backupCount=5),
+        #logging.StreamHandler()
+    ]
+)
+
+logger = logging.getLogger(__name__)
+
+analytics_logger = logging.getLogger('analytics')
+analytics_handler = RotatingFileHandler('analytics.log', maxBytes=10*1024*1024, backupCount=5)
+analytics_handler.setFormatter(logging.Formatter('%(message)s'))
+analytics_logger.addHandler(analytics_handler)
+analytics_logger.setLevel(logging.INFO)
+
+
+# connect_to_local for local development, connect_to_custom for using docker
+# client = weaviate.connect_to_local(
+#     # port=8080,
+#     # grpc_port=50051,
+#     additional_config=AdditionalConfig(
+#         timeout=Timeout(init=30, query=60, insert=120)  # Values in seconds
+#     )
+# )
+
+client = weaviate.connect_to_custom(
+    http_host=os.getenv("WEAVIATE_HOST", "weaviate"),
+    http_port=int(os.getenv("WEAVIATE_HTTP_PORT", 8080)),
+    http_secure=False,
+    grpc_host=os.getenv("WEAVIATE_HOST", "weaviate"),
+    grpc_port=int(os.getenv("WEAVIATE_GRPC_PORT", 50051)),
+    grpc_secure=False,
     additional_config=AdditionalConfig(
-        timeout=Timeout(init=30, query=60, insert=120)  # Values in seconds
-    )
+        timeout=Timeout(init=60, query=120, insert=120))
 )
 
 # Initialize conversation storage
@@ -217,7 +251,7 @@ def chat(user_query):
             alpha=a,
             single_prompt=mode,
             generative_provider=GenerativeConfig.ollama(  # Configure the Ollama generative integration
-                api_endpoint="http://host.docker.internal:11434",  # If NOT using Docker you might need: http://ollama:11434
+                api_endpoint=OLLAMA_URL,  #"http://host.docker.internal:11434" <-- for local development using Docker,  # If NOT using Docker you might need: http://ollama:11434
                 model="llama3.2",  # The model to use
                 temperature=temp,
             ),
@@ -247,7 +281,7 @@ def chat(user_query):
             alpha=a,
             grouped_task=mode,
             generative_provider=GenerativeConfig.ollama(  # Configure the Ollama generative integration
-                api_endpoint="http://host.docker.internal:11434",  # If NOT using Docker you might need: http://ollama:11434
+                api_endpoint=OLLAMA_URL,  # "http://host.docker.internal:11434" <-- for local development using Docker,  # If NOT using Docker you might need: http://ollama:11434
                 model="llama3.2",  # The model to use
                 temperature=temp
             ),
@@ -265,21 +299,38 @@ def chat(user_query):
     if len(conversation_history) > 5:
         conversation_history.pop(0)
 
+    # Step 5: Log analytics
+    duration = (datetime.now() - start_time).total_seconds()
+    analytics_data = {
+        "timestamp": start_time.isoformat(),
+        "session_id": session_id,
+        "user_query": user_query,
+        "rewritten_query": q if q != user_query else None,
+        "mode": prompt_mode,
+        "response_time_seconds": round(duration, 2),
+        # "success": not error_occurred,
+        "answer_length": len(answer) if answer else 0
+    }
+    analytics_logger.info(json.dumps(analytics_data))
+
+    logger.info(f"Response generated in {duration:.2f}s")
+
     return answer
 
 
 
 
 
+if __name__ == "__main__":
+    # Test unlimited convo
+    test = ""
+    while test != "end":
+        print("=" * 50)
+        test = input()
+        # print("Test 1: Email question")
+        print(chat(test))
 
-# Test unlimited convo
-test = ""
-while test != "end":
-    print("=" * 50)
-    test = input()
-    print(chat(test))
-
-client.close()  # Free up resources
+    client.close()  # Free up resources
 
 
 
