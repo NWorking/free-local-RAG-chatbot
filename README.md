@@ -76,3 +76,7 @@ An example of where query rewriting would be useful is a conversation where the 
 
 3. <ins>Logging</ins>
 The core RAG logic is also enhanced in this file with basic logging. It is currently set up to capture some useful information, such as: time, user, query, prompt mode, and LLM parameters. These logs are saved to the local machine, so they can be read anytime, even if docker is not running.
+
+# Areas for Improvement
+<ins>Term Mapping</ins>
+Chatbots can struggle with abbreviations. For instance, if you were making this chatbot for the Department of Artificial Intelligence Development, it is very likely that users would not want to type that every time, and would like to just type the abreviation: DAID. If you know there are likely to be instances like this for your where you plan to implement your chatbot. It would be good to give it a dictionary of common terms you might expect useres to use. This can be passed directly into the prompt so the chatbot can reference it when necessary.
