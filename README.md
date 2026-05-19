@@ -40,7 +40,7 @@ The above steps are preparation. Once they have been completed all that is left 
 
 As a quick summary, this is the order the scripts should be run in when starting from scratch: 
 Website_crawl_scrape, Clean_raw_text, Chunk_cleaned_text,
-docker-compose.yml, create_knowledge_chunks_collection, import_knowledge_chunks_data
+docker-compose.yml, create_knowledge_chunks_collection, import_knowledge_chunks_data,
 RAG_example
 
 
@@ -51,3 +51,28 @@ If the pages have already been loaded and don't need to be updated, just run the
 1. start docker desktop
 2. docker-compose.yml
 3. RAG_example.py
+
+
+# Once This is Successful
+Congratualtions! You got the basics down. The next steps are creating a frontend and making your RAG chatbot smarter. 
+
+The new workflow, assuming your data is loaded in is:
+1. Start docker desktop
+2. Change your directory in your terminal to point towards where ever these scripts are located
+3. In your terminal run: docker compose up
+4. You may have to close your terminal if it is streaming info from docker. In your terminal run: streamlit run app.py
+
+# Frontend
+I have a basic Streamlit powered frontend to allow a user to query the chatbot. This is in the file **app.py**. 
+
+# Enhancing the chatbot
+1. <ins>Prompt Modes</ins>
+In the multi_turn_RAG_conversation.py file, there is a much more in depth RAG set up. This file has **prompt modes** which allow the chatbot to have different prompt instructions for answering different types of questions. The prompts provided are for Extraction, Information, and Guidance modes. An unlimited number of modes can be added to have your chatbot have the best possible operating instructions related to what it is queried with. The specific prompt mode is decided in the core RAG logic (in the chat function) via a keyword router. This is an inexpensive way to try to see what the user needs and pick the prompt mode that is best for that function.
+
+2. <ins>Query Rewriting</ins>
+The logic below the prompt modes is for query rewriting and when queries should be rewritten. This enables the chatbot to have context and memory of recent exchanges in the current conversation. The conversation history is saved to a dictionary in the core RAG logic (in the chat function). The **rewrite_query** function takes in the current query and access the past 3 turns of conversation. It then calls Ollama to rewrite the query with conversation history as context. This rewritten query is then used in place of the users original query, so the chatbot has some context. The **needs_rewriting** funtion checks for keywords in the users query to see if rewriting is necessary. This check is because any call to an LLM is taxing. In the event of query rewriting, latency and compute are increased. Users do not like this. This function tries to avoid rewriting where possible, to save resources.
+
+An example of where query rewriting would be useful is a conversation where the user asks "What is the largest national park?" then follows up in their next query with "Where is it located?". Without conversation history, the chatbot would not know what "it" is referencing in the users second query.
+
+4. <ins>Logging</ins>
+The core RAG logic is also enhanced in this file with basic logging. It is currently set up to capture some useful information, such as: time, user, query, prompt mode, and LLM parameters. These logs are saved to the local machine, so they can be read anytime, even if docker is not running.
