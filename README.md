@@ -74,5 +74,5 @@ The logic below the prompt modes is for query rewriting and when queries should 
 
 An example of where query rewriting would be useful is a conversation where the user asks "What is the largest national park?" then follows up in their next query with "Where is it located?". Without conversation history, the chatbot would not know what "it" is referencing in the users second query.
 
-4. <ins>Logging</ins>
+3. <ins>Logging</ins>
 The core RAG logic is also enhanced in this file with basic logging. It is currently set up to capture some useful information, such as: time, user, query, prompt mode, and LLM parameters. These logs are saved to the local machine, so they can be read anytime, even if docker is not running.
