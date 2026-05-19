@@ -59,8 +59,8 @@ Congratualtions! You got the basics down. The next steps are creating a frontend
 The new workflow, assuming your data is loaded in is:
 1. Start docker desktop
 2. Change your directory in your terminal to point towards where ever these scripts are located
-3. In your terminal run: docker compose up
-4. You may have to close your terminal if it is streaming info from docker. In your terminal run: streamlit run app.py
+3. In your terminal run: docker compose up -d
+4. In your terminal run: streamlit run app.py
 
 # Frontend
 I have a basic Streamlit powered frontend to allow a user to query the chatbot. This is in the file **app.py**. 
