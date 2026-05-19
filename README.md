@@ -16,7 +16,7 @@ I used docker desktop to host my instances of Weaviate.
 **Important** - 
 
 I gathered the data that my RAG chatbot would base its responses off of from a website. I did not have access to the backend of this website, so I had to scrape it. 
-The idea was that it would be deployed on this website after being proved to be successful. <ins> You do not need to scrape a website if you already have a file containing the information your RAG chatbot should base its responses off of. </ins> It would still be a good idea to clean your information file. It will still be necessary to chunk that information.
+The idea was that it would be deployed on this website after being proved to be successful. <ins> You do not need to scrape a website if you already have the file or files containing the information your RAG chatbot should base its responses off of. </ins> It would still be a good idea to clean your information file(s). It will still be necessary to chunk that information.
 
 # First Run
 The first time this chatbot is created, the information needs to be gathered and vectorized. I gathered information via website crawling and scraping, so that is part of my process in this repository. There are other ways to gather the data that you want you're RAG chatbot to be able to call upon.
