@@ -1,3 +1,6 @@
+<img src="images/RAG docker flow diagram.png" width="100%">
+
+
 # free-local-RAG-chatbot
 
 In this repository are the scripts to make a Retrieval Augemented Generation (RAG) chatbot. This chatbot is completely free and locally hosted.
