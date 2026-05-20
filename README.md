@@ -5,6 +5,7 @@
    <br>
    <em>The RAG chatbot in action</em>
 </p>
+
 # Overview
 
 In this repository are the scripts to make a Retrieval Augemented Generation (RAG) chatbot. This chatbot is completely free and locally hosted.
