@@ -1,15 +1,18 @@
-<img src="images/RAG_docker_flow_diagram" width="100%">
+<h1>free-local-RAG-chatbot</h1>
+<p align="center">
+   <img src="images/RAG_docker_flow_diagram.PNG" alt="Docker set up" width="60%">
+   <p align="center">The Docker orchestration for the chatbot</p>
+</p>
 
-
-# free-local-RAG-chatbot
+# Overview
 
 In this repository are the scripts to make a Retrieval Augemented Generation (RAG) chatbot. This chatbot is completely free and locally hosted.
 
-For the AI model: I used <ins>Ollama</ins> which allows the user to download pretrained LLM models to their local machine for free. Specifically, I am using the Llama 3.2 model from Meta.
+For the AI model: I used <ins>Ollama</ins> which allows the user to download pretrained LLMs to their local machine for free. Specifically, I am using the **Llama 3.2** model from Meta.
 
 RAG chatbots require vector databases. I chose <ins>Weaviate</ins>, as it is an open-source, cloud native vector database.
 
-I used docker desktop to host my instances of Weaviate.
+I deployed Weaviate, Ollama, and my chatbot app as separate Docker containers using <ins>Docker Desktop</ins>.
 
 **Prerequisites** - Both of these are free to install
 
