@@ -1,5 +1,10 @@
 # free-local-RAG-chatbot
 
+<p align="center">
+   <img src="images/chatbot_example.PNG" alt="RAG Chatbot interface" width="60%">
+   <br>
+   <em>The RAG chatbot in action</em>
+</p>
 # Overview
 
 In this repository are the scripts to make a Retrieval Augemented Generation (RAG) chatbot. This chatbot is completely free and locally hosted.
