@@ -1,4 +1,4 @@
-<img src="images/RAG docker flow diagram.png" width="100%">
+<img src="images/RAG_docker_flow_diagram" width="100%">
 
 
 # free-local-RAG-chatbot
