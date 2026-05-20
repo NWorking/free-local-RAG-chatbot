@@ -7,10 +7,11 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# data for ingestion is from chunked_pages.json  If you have your own data file, change it to be the correct one
+COPY chunked_pages.json . 
+
 # Copy your code
 COPY create_knowledge_chunks_collection.py .
-# data for ingestion is from chunked_pages.json  If you have your own data file, change it to be the correct one
-COPY chunked_pages.json .           
 COPY import_knowledge_chunks_data.py .
 COPY multi_turn_RAG_conversation.py .
 COPY app.py .
