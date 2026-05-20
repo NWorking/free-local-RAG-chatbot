@@ -103,6 +103,7 @@ services:
       OLLAMA_URL: ${OLLAMA_URL}
     networks:
       - chatbot-network
+    
 
   chatbot:
     build: .
@@ -116,6 +117,8 @@ services:
       OLLAMA_URL: ${OLLAMA_URL}
     networks:
       - chatbot-network
+    volumes:
+      - ./logs:/app/logs
 
 volumes:
   weaviate_data:
