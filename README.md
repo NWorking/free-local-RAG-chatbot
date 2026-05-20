@@ -1,8 +1,4 @@
-<h1>free-local-RAG-chatbot</h1>
-<p align="center">
-   <img src="images/RAG_docker_flow_diagram.PNG" alt="Docker set up" width="60%">
-   <p align="center">The Docker orchestration for the chatbot</p>
-</p>
+# free-local-RAG-chatbot
 
 # Overview
 
@@ -82,6 +78,57 @@ An example of where query rewriting would be useful is a conversation where the 
 
 3. <ins>Logging</ins>
 The core RAG logic is also enhanced in this file with basic logging. It is currently set up to capture some useful information, such as: time, user, query, prompt mode, and LLM parameters. These logs are saved to the local machine, so they can be read anytime, even if docker is not running.
+
+# Deployment
+<p align="center">
+   <img src="images/RAG_docker_flow_diagram.PNG" alt="Docker set up" width="60%">
+   <br>
+   <em>The Docker orchestration for the chatbot</em>
+</p>
+Docker desktop will automatically use the dockerfile to build the custom image when running docker build as well as using docker-compose.yml for container orchestration.
+
+<h3>dockerfile</h3>
+Builds a Python 3.11 container with all dependencies and scripts needed for schema creation, data ingestion, and the Streamlit chatbot UI. The same image serves all three purposes—init jobs override the default Streamlit command with their own Python scripts.
+
+<h3>docker-compose.yml</h3>
+This setup runs the local RAG chatbot with three core components: Weaviate (vector database), Ollama (LLM provider), and the Chatbot application. Each one of these runs in its own docker container.
+<p>
+<br>
+<ins>Infrastructure:</ins>
+<br>
+
+1. Weaviate container -
+<br>Vector database storing embeddings and knowledge chunks. Exposes default HTTP (8080) and gRPC (50051) ports. Uses Ollama modules for embeddings and generation.
+
+2. Ollama container -
+<br>Local LLM server with GPU support. Serves models on port 11434.
+
+3. Ollama pull -
+<br>One-time initializer that downloads required models (llama3.2, nomic-embed-text) before other services start.
+
+<ins>Initialization pipeline:</ins>
+
+1. init-schema -
+<br>Creates Weaviate collection schema. Waits for Weaviate, Ollama, and model pulls to complete.
+
+2. init-ingest -
+<br>Imports knowledge chunk data into Weaviate. Runs after schema creation.
+
+<ins>Application:</ins>
+1. Chatbot container -
+<br>Streamlit UI on port 8501. Starts only after data ingestion completes. Logs persist to ./logs.
+</p>
+
+<h3>Key design choices</h3>
+<p>
+Health checks: Weaviate and Ollama have readiness probes so dependents start only when truly ready.
+
+Startup order: ollama and weaviate containers → ollama-pull → init-schema → init-ingest → chatbot ensures models and data exist before the app runs.
+
+Persistent volumes: weaviate_data and ollama_data survive container restarts.
+
+Isolated network: All services communicate over chatbot-network (bridge driver).
+</p>
 
 # Areas for Improvement
 <ins>Term Mapping</ins>
