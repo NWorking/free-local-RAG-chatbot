@@ -153,24 +153,6 @@ def needs_rewriting(query):
 #---RETRIEVAL AUGEMENTED GENERATION-------------------------------------------------------------------------------------
 
 
-# Configure basic logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        RotatingFileHandler('chatbot.log', maxBytes=10*1024*1024, backupCount=5),
-        #logging.StreamHandler()
-    ]
-)
-
-logger = logging.getLogger(__name__)
-
-analytics_logger = logging.getLogger('analytics')
-analytics_handler = RotatingFileHandler('analytics.log', maxBytes=10*1024*1024, backupCount=5)
-analytics_handler.setFormatter(logging.Formatter('%(message)s'))
-analytics_logger.addHandler(analytics_handler)
-analytics_logger.setLevel(logging.INFO)
-
 
 # connect_to_local for local development, connect_to_custom for using docker
 # client = weaviate.connect_to_local(
@@ -206,9 +188,32 @@ def chat(user_query):
         answer: the chatbots response
     """
 
+    # Configure basic logging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            RotatingFileHandler('logs/chatbot.log', maxBytes=10*1024*1024, backupCount=5),
+            #logging.StreamHandler()
+        ]
+    )
+    
+    logger = logging.getLogger(__name__)
+    
+    analytics_logger = logging.getLogger('analytics')
+    analytics_handler = RotatingFileHandler('logs/analytics.log', maxBytes=10*1024*1024, backupCount=5)
+    analytics_handler.setFormatter(logging.Formatter('%(message)s'))
+    analytics_logger.addHandler(analytics_handler)
+    analytics_logger.setLevel(logging.INFO)
+
+    start_time = datetime.now()
     answer = None
+
+    logger.info(f"[Session: {session_id}] New query: '{user_query}'")
+    
     # Step 1: Check if we need to rewrite
     if conversation_history and needs_rewriting(user_query):
+        logger.info("Query needs rewriting (contains pronouns/follow-up words)")
         print(f"Original query: {user_query}")
         user_query = rewrite_query(user_query, conversation_history)
         print(f"Rewritten query: {user_query}")
@@ -223,18 +228,21 @@ def chat(user_query):
         temp = 0.01
         a = 0.05
         print("MODE = EXTRACT")
+        logger.info(f"Mode: EXTRACT (alpha={a}, temp={temp})")
     elif any(k in q for k in ["who should", "who do i", "how do i"]):
         mode = get_guidance_prompt(q) # guidance
         prompt_mode = "guidance"
         temp = 0.2
         a = 0.25
         print("MODE = GUIDANCE")
+        logger.info(f"Mode: GUIDANCE (alpha={a}, temp={temp})")
     else:
         mode = get_information_prompt(q) # information
         prompt_mode = "information"
         temp = 0.2
         a = 0.25
         print("MODE = INFORMATION")
+        logger.info(f"Mode: INFORMATION (alpha={a}, temp={temp})")
 
 
     # EXTRACT MODE
@@ -265,9 +273,11 @@ def chat(user_query):
             if "not in my data" not in obj.generated:
                 answer = obj.generated # If the bot determines there is an appropriate response, this is it
                 valid_response=True
+                logger.info(f"Answer found in chunk: {obj.properties.get('url', 'unknown')}")
                 break
         if valid_response == False:
             answer = response.objects[0].generated # If no appropriate answer is found, this returns a "not found" response
+            logger.info("No valid answer found in any chunk")
 
 
     # other prompt modes can use grouped_task to produce a response based on aggregated retrieval
